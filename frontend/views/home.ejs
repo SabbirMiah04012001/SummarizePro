@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SummarizePro Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div id="app" class="studio library-page">
+        <div id="sidebar">
+            <a href="/home/" id="logo" aria-label="SummarizePro">
+                <span class="brand-mark" aria-hidden="true">S</span>
+                <span class="brand-name">SummarizePro</span>
+            </a>
+            <nav>
+                <ul>
+                    <li>
+                        <a href="/home/" class="link home-sidebar is-current">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"/></svg>
+                            <span class="nav-label">Library</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div id="profile" class="profile-bottom">
+                <p class="account-email" title="<%=userEmail%>"><%=userEmail%></p>
+                <a class="logout-link" href="/logout">Log out</a>
+            </div>
+        </div>
+
+        <div class="studio-main">
+            <header class="topbar">
+                <% if(urlPath) { %>
+                <button class="icon-btn" onclick="navigateToUrl('/home/' + '<%= urlPath %>'.split('/').slice(0, -1).join('/'))" aria-label="Back">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg>
+                </button>
+                <% } %>
+                <div class="location"><%= urlPath && urlPath.split("/").pop() ? urlPath.split("/").pop() : "Library" %></div>
+                <input class="top-search" type="search" placeholder="Search" aria-label="Search">
+            </header>
+        <div id="main-content" class="canvas">
+            <% const folderCount = Object.keys(fs || {}).length; %>
+            <% const fileCount = Object.keys(files || {}).length; %>
+            <div class="library-head">
+                <div>
+                    <h1><%= urlPath && urlPath.split("/").pop() ? urlPath.split("/").pop() : "Library" %></h1>
+                    <p><%= folderCount %> <%= folderCount === 1 ? "folder" : "folders" %> · <%= fileCount %> <%= fileCount === 1 ? "file" : "files" %></p>
+                </div>
+            </div>
+            <div class="content-header">
+                <button onclick="createFolder()">New folder</button>
+                <button class="primary" onclick="uploadFile()">+ Upload PDF</button>
+            </div>
+            <div class="file-explorer">
+                <% for(let path in fs){ %>
+                    <div class="folder" onclick="navigateToUrl(((window.location.pathname.slice(-1) === '/') ? window.location.pathname.slice(0, -1) : window.location.pathname) + '/' + '<%= path %>')">
+                        <span><%= path %></span>
+                        <span class="item-meta">Folder</span>
+                        <button type="button" class="bin" data-folder="<%= path %>" aria-label="Delete <%= path %>">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2M8 7l1 12h6l1-12"/></svg>
+                        </button>
+                    </div>
+                <% } %>
+
+                <% for(let file in files){ %>
+                    <div class="file" onclick="navigateToUrl((((window.location.pathname.slice(-1) === '/') ? window.location.pathname.slice(0, -1) : window.location.pathname) + '/' + '<%= file %>.file'))">
+                        <span><%= file %></span>
+                        <span class="item-meta"><%= files[file].ready ? "Ready" : "Processing" %></span>
+                        <button type="button" class="bin" data-file="<%= files[file].storedName %>" aria-label="Delete <%= file %>">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2M8 7l1 12h6l1-12"/></svg>
+                        </button>
+                        <% if(!files[file].ready){ %>
+                            <img class="processing" src="/images/file_loading_icon.gif" alt="">
+                        <% } %>
+                    </div>
+                <% } if(fileCount == 0 && folderCount == 0){ %>
+                    <span class="empty-library">Nothing here yet. Create a folder or upload a PDF.</span>
+                <% } %>
+            </div>
+        </div>
+        </div>
+
+        <div id="popupContainer" hidden>
+            <div class="popupContent uploadDialogue" hidden>
+                <h2>Upload a PDF</h2>
+                <p class="dialog-note">Saved in <span class="dialog-place">Library</span>.</p>
+                <form action="/upload" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="path" class="folderPathVar" required>
+                    <label for="uploadFileTitle">Title</label>
+                    <input name="title" id="uploadFileTitle" type="text" pattern="^[a-zA-Z0-9\s\._\-]*$" title="Only letters, numbers, spaces, dots, underscores, and dashes are allowed" required>
+                    <label for="fileInput" class="fileInputLabel">Choose PDF</label>
+                    <input accept=".pdf" name="file" type="file" id="fileInput" class="fileInput" hidden required>
+                    <span class="fileInputLabelName">No file selected</span>
+                    <div class="dialog-actions">
+                        <button type="button" class="cancel-button" onclick="closeDialogs()">Cancel</button>
+                        <button type="submit" class="create-button">Upload</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="popupContent createFolderDialogue" hidden>
+                <h2>New folder</h2>
+                <p class="dialog-note">Created in <span class="dialog-place">Library</span>.</p>
+                <form action="/newfolder" method="post">
+                    <input type="hidden" name="path" class="folderPathVar" required>
+                    <label for="folderTitle">Name</label>
+                    <input name="title" id="folderTitle" type="text" pattern="^[a-zA-Z0-9\s\._\-]*$" title="Only letters, numbers, spaces, dots, underscores, and dashes are allowed" required>
+                    <div class="dialog-actions">
+                        <button type="button" class="cancel-button" onclick="closeDialogs()">Cancel</button>
+                        <button type="submit" class="create-button">Create folder</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script src="/js/home.js"></script>
+</html>

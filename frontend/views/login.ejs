@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SummarizePro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="login-wrapper">
+        <!-- Branding Area on the Left -->
+        <div class="login-branding">
+            <div class="orbit" aria-hidden="true">
+                <span class="orbit-glow"></span>
+                <span class="orbit-ring"></span>
+                <span class="brand-mark">S</span>
+                <span class="orbit-track">
+                    <span class="orbit-slot slot-pdf">
+                        <span class="orbit-icon">
+                            <svg viewBox="0 0 24 24"><path d="M7 3.5h7l5 5V20H7z"/><path d="M14 3.5V9h5"/></svg>
+                        </span>
+                    </span>
+                    <span class="orbit-slot slot-quiz">
+                        <span class="orbit-icon">
+                            <svg viewBox="0 0 24 24"><path d="M6 4.5h12v15H6z"/><path d="M9 9h6M9 12.5h6M9 16h3"/></svg>
+                        </span>
+                    </span>
+                    <span class="orbit-slot slot-phone">
+                        <span class="orbit-icon">
+                            <svg viewBox="0 0 24 24"><rect x="8" y="3.5" width="8" height="17" rx="2"/><path d="M11 17.5h2"/></svg>
+                        </span>
+                    </span>
+                    <span class="orbit-slot slot-laptop">
+                        <span class="orbit-icon">
+                            <svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="10" rx="1.5"/><path d="M3.5 17.5h17"/></svg>
+                        </span>
+                    </span>
+                </span>
+            </div>
+            <h1>SummarizePro</h1>
+        </div>
+
+        <!-- Login Form on the Right -->
+        <div class="login-form-container">
+            <div class="login-card">
+            <span class="login-glow" aria-hidden="true"></span>
+            <span class="login-border" aria-hidden="true"></span>
+            <form class="login-form" action="/login" method="post">
+                <h2>Login</h2>
+                <% if (typeof message !== 'undefined' && message && message.length) { %>
+                    <p style="color: red; text-align: center;"><%= message %></p>
+                <% } %>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required
+                        <% if (typeof email !== 'undefined' && email && email.length) { %>
+                            value="<%= email %>"
+                        <% } %>
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn-login">Login</button>
+                </div>
+                <p class="signup-link">Not a member? <a href="/register">Register here</a></p>
+            </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

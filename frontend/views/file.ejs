@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SummarizePro <%= urlPath.split("/").pop() %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div id="app" class="studio library-page">
+        <aside id="sidebar">
+            <a href="/home/" id="logo" aria-label="SummarizePro">
+                <span class="brand-mark" aria-hidden="true">S</span>
+                <span class="brand-name">SummarizePro</span>
+            </a>
+            <nav class="section-nav">
+                <p class="nav-kicker">Study</p>
+                <ul>
+                    <li><a href="/home/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"/></svg><span class="nav-label">Library</span></a></li>
+                    <li><a href="#summary" class="is-current"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h8l4 4V19.5H6zM14 4.5V9h4"/><path d="M8.5 13h7M8.5 16.5h5"/></svg><span class="nav-label">Summary</span></a></li>
+                    <li><a href="#quiz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h12v15H6z"/><path d="M9 9h6M9 12.5h6M9 16h3"/></svg><span class="nav-label">Quiz</span></a></li>
+                    <li><a href="#chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v9H8l-3 3v-12Z"/></svg><span class="nav-label">Chat</span></a></li>
+                    <li><a href="#document"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l5 5V20H7z"/><path d="M14 3.5V9h5"/></svg><span class="nav-label">Document</span></a></li>
+                </ul>
+            </nav>
+            <div class="side-history">
+                <p class="nav-kicker">Past quizzes</p>
+                <div class="quiz-history">
+                    <% if(quizHistory.length > 0){ %>
+                        <% for(let quiz of quizHistory){ %>
+                            <%
+                                const date = new Date(parseInt(quiz["began"]));
+                                const day = date.getDate().toString().padStart(2, '0');
+                                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                                const year = date.getFullYear().toString().slice(-2);
+                                let hours = date.getHours();
+                                const minutes = date.getMinutes().toString().padStart(2, '0');
+                                const amPm = hours >= 12 ? 'pm' : 'am';
+                                hours = hours % 12 || 12;
+                                const formattedDate = `${hours}:${minutes} ${amPm}, ${day}/${month}/${year}`;
+                            %>
+                            <button type="button" onclick="openQuizHistory(this)" class="historic-quiz"><%= formattedDate %></button>
+                            <script id="<%=quiz["began"]%>" type="application/json"><%- JSON.stringify(quiz["submittedQuiz"]) %></script>
+                        <% } %>
+                    <% } else { %>
+                        <span class="no-quiz">No quizzes yet</span>
+                    <% } %>
+                </div>
+            </div>
+        </aside>
+        <div class="studio-main">
+            <header class="topbar">
+                <button class="icon-btn" onclick="navigateToUrl('/home/' + '<%= urlPath %>'.split('/').slice(0, -1).join('/'))" aria-label="Back to folder">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg>
+                </button>
+                <div class="location"><%= urlPath.split("/").pop() %></div>
+                <button class="delete" onclick="deleteFile()">Delete</button>
+            </header>
+            <div id="main-content" class="canvas main-content-file <%=summary==null?'processing':''%>">
+                <input type="hidden" name="filename" value="<%=pdfName%>">
+                <section id="summary" class="sheet">
+                    <h1>Summary</h1>
+                    <p class="lede">Key points taken from this PDF.</p>
+                    <article class="doc-card">
+                        <header class="doc-card-head"><h2><%= urlPath.split("/").pop() %></h2></header>
+                        <div class="doc-card-body"><%- summary %></div>
+                    </article>
+                </section>
+                <section id="quiz" class="sheet">
+                    <h1>Quiz</h1>
+                    <p class="lede">Questions use only facts found in this PDF.</p>
+                    <article class="doc-card">
+                        <div class="quiz-view">
+                        <% if(quiz == "") {%>
+                            <span class="make-quiz-title"><img src="/images/quiz.png" alt="quiz icon"> Multiple Choice<br>Quiz</span>
+                            <form onsubmit="createQuiz(event)" class="generate-quiz" action="/create_quiz" method="post">
+                                <p class="capacity-note">Reading this PDF for usable questions...</p>
+                                <div class="question-count" hidden>
+                                    <label class="count-label" for="questionCount">Questions</label>
+                                    <input type="range" id="questionCount" name="option" min="1" max="1" value="1" step="1">
+                                    <div class="count-scale">
+                                        <span>1</span>
+                                        <strong class="count-value">1</strong>
+                                        <span class="count-max">1</span>
+                                    </div>
+                                </div>
+                                <input hidden name="filename" type="text" value="<%=pdfName%>">
+                                <button class="creat-quiz" disabled>Create Quiz</button>
+                            </form>
+                        <% } else if(quiz.began == null){ %>
+                            <span class='attempt-quiz'>
+                                Once you begin, you have <% let number = 0; %>
+                                <% for (const part in JSON.parse(quiz.quiz)) { %>
+                                    <% number++; %>
+                                <% } %>
+                                <%= number %> minutes to complete this quiz.
+                                <button onclick='displayQuiz(true)'>Begin?</button>
+                            </span>
+                        <% } else{ %>
+                            <script>
+                                document.addEventListener("DOMContentLoaded", function(){
+                                    displayQuiz(true)
+                                })
+                            </script>
+                        <% } %>
+                        </div>
+                    </article>
+                </section>
+                <section id="chat" class="sheet">
+                    <h1>Chat</h1>
+                    <p class="lede">Ask about the PDF. Answers stay in this file.</p>
+                <div class="chat-container">
+                    <div class="chat-bar">
+                        <h2>Chat</h2>
+                        <button type="button" onclick="resetHistory()">Clear chat</button>
+                    </div>
+                    <div class="messages">
+                        <div class="message greeting">
+                            <div class="message-header"><span class="who">S</span> SummarizePro</div>
+                            <div class="message-body">Ask a question about this PDF. The summary is in the section above.</div>
+                        </div>
+
+                        <% if(messageHistory != ""){ %>
+                            <%const jsonstring = messageHistory;%>
+                            <%const parsedMessageHistory = JSON.parse(jsonstring);%>
+                            <% for(let  message of parsedMessageHistory){ %>
+                                <div class="message question">
+                                    <div class="message-header">
+                                        <span class="who">You</span>
+                                    </div>
+                                    <div class="message-body">
+                                        <%-message["Q"]%>
+                                    </div>
+                                </div>
+                                <div class="message answer">
+                                    <div class="message-header">
+                                        <span class="who">S</span> SummarizePro
+                                    </div>
+                                    <div class="message-body">
+                                        <%-message["A"]%>
+                                    </div>
+                                </div>
+                            <% } %>
+                        <%}%>
+
+                    </div>
+                    <div class="chat-interact">
+                        <form method="POST">
+                            <input autocomplete="off" spellcheck="false" name="message" type="text" placeholder="Type here to chat..." required>
+                            <input hidden name="filename" type="text" value="<%=pdfName%>">
+                            <% if(quiz != "") {%>
+                                <script id="preloadedQuiz" type="application/json">
+                                    <%- JSON.stringify(quiz) %>
+                                </script>
+                            <% } %>
+                            <button type="submit"><img src="/images/send.png" alt="send icon"></button>
+                        </form>
+                    </div>
+                </div>
+                </section>
+                <section id="document" class="sheet">
+                    <h1>Document</h1>
+                    <p class="lede">The original PDF.</p>
+                    <article class="doc-card">
+                        <iframe src="/uploads/<%=pdfName%>?filename=<%=pdfName%>" title="Embedded PDF"></iframe>
+                    </article>
+                </section>
+            </div>
+        </div>
+
+        <div id="popupContainer" style="display: none;">
+        </div>
+    </div>
+</body>
+
+<script src="/js/file.js"></script>
+</html>

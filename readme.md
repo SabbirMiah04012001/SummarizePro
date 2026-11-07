@@ -1,69 +1,93 @@
-note for anybody not on the team: you will not be able to run this project if you do not have access to the specific credentials for it. You can however modify the python scripts to initialize with your own custom google project, and then go from there using this as a general guide.
+# SummarizePro
 
-Prerequisites:
+SummarizePro helps you study a PDF. You upload a document, read a short summary, take a quiz made only from facts in that file, and ask questions about it in chat.
 
-- NodeJS
-- Python3.10
-- gcloud
-- NPM
-- MySql Server
+Open the app in your browser. On this computer that address is [http://127.0.0.1:3000](http://127.0.0.1:3000).
 
+## What to install
 
-Start by ensuring gcloud is initiated.
-- gcloud init
+Install these programs first:
 
-Follow the onscreen prompts until process is completed.
-Next, run
+- [Node.js](https://nodejs.org/), which includes npm
+- [Python 3](https://www.python.org/downloads/)
+- MySQL or MariaDB, listening on `127.0.0.1` port `3307`
 
-- gcloud auth login
+In the project folder, download the Node packages with:
 
-This will prompt you to login, if on a desktop. Else it will provide a link. you must run it on your local machine and follow the onscreen prompts.
+```bash
+npm install
+```
 
-Now, given that you have access to the service worker credentials, run the following with the path to it on your system. (replace export with set on windows.)
+That installs:
 
-- export export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
+- `bcrypt`, to store passwords safely
+- `body-parser`, to read form data
+- `ejs`, to build the pages
+- `express`, to run the website
+- `express-session`, to keep you signed in
+- `multer`, to accept PDF uploads
+- `mysql`, to talk to the database
 
-With this path variable set, you may run the following in your terminal:
+Summaries and quizzes on this computer use only Python’s built-in tools, so they do not need extra Python packages.
 
-- gcloud config set project "summarizepro"
+Chat, and reading a PDF through Google, need these Python packages:
 
-- gcloud auth activate-service-account summarizepro-685@summarizepro.iam.gserviceaccount.com --key-file path/to/credentials.json
+```bash
+pip3 install google-cloud-documentai google-cloud-storage tenacity pandas numpy vertexai
+```
 
-- gcloud projects add-iam-policy-binding summarizepro --member serviceAccount:summarizepro-685@summarizepro.iam.gserviceaccount.com --role roles/reader
+Create the database from `backend/db/create_db.sql`, then start the app with `npm start`.
 
-- gcloud projects add-iam-policy-binding summarizepro --member user:summarizep@gmail.com --role roles/reader
+## Create an account
 
-- gcloud services enable documentai.googleapis.com storage.googleapis.com aiplatform.googleapis.com
+1. On the sign-in page, choose **Register here**.
+2. Enter your email.
+3. Choose a password of at least 6 characters, then type it again under **Confirm Password**.
+4. If the two passwords differ, the form says **Passwords do not match** and will not continue.
+5. Choose **Register**. You are signed in and taken to your library.
 
-Next, install the following packages for Python3.10. You may have to change pip3 to 'pip' or something else depending on your configuration.
+Already have an account? Choose **Login here** and sign in with the same email and password.
 
-- pip3 install google-cloud-documentai google-cloud-storage tenacity pandas vertexai
+## Your library
 
-At this stage, if everything went well, you should be able to run all of the python scripts in the project.
-Now, similar to the situation with pip3, if you do not run python3.10 with 'python3', you must change a few lines in main.js in the root directory of the project. In this file there will be a number of functions that are named starting with 'InvokePython....'. Near the top of these functions, there is a line that looks like this
+The library is your home page. The left panel shows **Library**, your email, and **Log out**.
 
-- var process = spawn('python3' //rest of line
+- **New folder** creates a folder in the place you are viewing. Names can use letters, numbers, spaces, dots, underscores, and dashes. **Cancel** closes the box without creating anything.
+- **+ Upload PDF** asks for a title and a PDF file, then saves it in the current folder. While the summary is being prepared, the file shows as **Processing**. When it is ready, it shows **Ready**.
+- Click a folder to open it. Click a file to study it.
+- The search box filters the folders and files on the current page.
+- Rest the pointer on a folder or file to show a red bin in the corner. Click it and confirm to delete. Deleting a folder also deletes everything inside it.
+- **Back** in the top bar returns you to the folder you came from.
 
-you must change the 'python3' to whatever applies to you. NOTE: if you would like to use the python scripts in a venv, you must alter this code here so that it first activates the venv. Please refer to this example code snippet below for help applying this to the file:
+## Study a PDF
 
-- // Define the path to your Python script within the virtual environment
-- const pythonScriptPath = path.join(__dirname, 'path_to_your_script/question_processing.py');
-- // Activate the virtual environment and then spawn the Python process
-- const process = spawn('bash', ['-c', `. venv/bin/activate && python3 ${pythonScriptPath} ${req.body.filename.replace(".pdf", "")} 'Chat History:\n${req.body.contextual_history}\nPrompt:\n${req.body.question}'`]);
+Opening a file shows four sections. Use the left panel to jump to one, or scroll the page.
 
-Now that all bits related to python are setup, you may move on to getting the nodejs server running. first thing to do is to run the create_db.sql script in mysql. Do this however you please, below is a command line example:
+### Summary
 
-- cd /path/to/directory
-- mysql -u username -p
-- source create_db.sql;
-- exit;
+This is a short reading of the PDF. It stays with the file, so you do not regenerate it each visit.
 
-Install all npm packages required:
+### Quiz
 
-- npm install
+1. The page reads the PDF and tells you the highest number of questions it can support. You can choose any number from 1 up to that maximum.
+2. Choose **Create Quiz**, then **Begin**.
+3. Answer one question at a time. Tick an answer, then choose **Next**. **Back** returns to the previous question. On the last question, **Finish** ends the quiz.
+4. You have one minute per question. If time runs out, submit the quiz to see the result.
+5. The result shows your score and marks the correct choice. A wrong tick is shown as well.
+6. Choose **New quiz** to pick a new number of questions and start again. The quiz you just finished appears under **Past quizzes** on the left. Click a past quiz to open that result again.
 
-And now you should be ready to start the application:
+Questions use only facts that appear in the PDF. If a file does not contain enough of those facts, the page says a quiz cannot be made.
 
-- node index.js
+### Chat
 
-Navigate to 'localhost/' in your web browser to use the application.
+Type a question about the PDF and send it. The reply appears under your question. **Clear chat** removes the conversation for this file. The summary above is not deleted.
+
+### Document
+
+This is the original PDF, so you can check a line while you read the summary or take a quiz.
+
+**Delete** in the top bar removes this PDF after you confirm. You return to the folder it was in.
+
+## Sign out
+
+Choose **Log out** in the left panel. The next visit asks you to sign in again.
